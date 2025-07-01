@@ -4,6 +4,10 @@
 <?import javafx.scene.canvas.Canvas?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.SeparatorMenuItem?>
 <?import javafx.scene.control.Slider?>
 <?import javafx.scene.control.Tooltip?>
 <?import javafx.scene.layout.BorderPane?>
@@ -13,56 +17,86 @@
 
 <BorderPane fx:id="rootPane" xmlns:fx="http://javafx.com/fxml"
             fx:controller="illumination.jeudelavie.GameOfLifeController"
-            stylesheets="/illumination/jeudelavie/styles.css">
+            style="-fx-background-color: #333333;">
     <padding>
         <Insets bottom="15.0" left="15.0" right="15.0" top="15.0"/>
     </padding>
 
     <top>
-        <VBox alignment="CENTER" spacing="10" visible="true" managed="true">
-            <Label text="Conway's Game of Life" styleClass="title-label" visible="true" managed="true">
-                <font>
-                    <Font name="System Bold" size="24.0"/>
-                </font>
-            </Label>
-            <Label text="Simulation de vie cellulaire" styleClass="subtitle-label" visible="true" managed="true">
-                <font>
-                    <Font size="14.0"/>
-                </font>
-            </Label>
+        <VBox spacing="5" visible="true" managed="true">
+            <MenuBar styleClass="menu-bar">
+                <Menu text="Fichier">
+                    <MenuItem text="Quitter" onAction="#onExitMenuItemClick" />
+                </Menu>
+                <Menu text="Simulation">
+                    <MenuItem fx:id="startStopMenuItem" text="Démarrer" onAction="#onStartStopButtonClick" />
+                    <MenuItem fx:id="stepMenuItem" text="Avancer d'un tour" onAction="#onStepButtonClick" />
+                    <SeparatorMenuItem />
+                    <MenuItem text="Effacer" onAction="#onClearButtonClick" />
+                    <MenuItem text="Aléatoire" onAction="#onRandomButtonClick" />
+                </Menu>
+                <Menu text="Aide">
+                    <MenuItem text="À propos" onAction="#onAboutMenuItemClick" />
+                    <MenuItem text="Règles du jeu" onAction="#onRulesMenuItemClick" />
+                </Menu>
+                <Menu text="Options">
+                    <Menu text="Vitesse">
+                        <MenuItem text="Diminuer" onAction="#decreaseSpeed" />
+                        <MenuItem text="Augmenter" onAction="#increaseSpeed" />
+                    </Menu>
+                    <Menu text="Zoom">
+                        <MenuItem text="Diminuer" onAction="#decreaseZoom" />
+                        <MenuItem text="Augmenter" onAction="#increaseZoom" />
+                        <MenuItem text="Réinitialiser" onAction="#resetZoom" />
+                    </Menu>
+                </Menu>
+            </MenuBar>
+
+            <VBox alignment="CENTER" spacing="10" visible="true" managed="true">
+                <Label text="Jeu de la Vie" styleClass="title-label" visible="true" managed="true">
+                    <font>
+                        <Font name="System Bold" size="24.0"/>
+                    </font>
+                </Label>
+                <Label text="Simulation de vie cellulaire" styleClass="subtitle-label" visible="true" managed="true">
+                    <font>
+                        <Font size="14.0"/>
+                    </font>
+                </Label>
+            </VBox>
         </VBox>
     </top>
 
     <center>
-        <Canvas fx:id="gameCanvas" width="800" height="600" styleClass="game-canvas" visible="true" managed="true"/>
+        <Canvas fx:id="gameCanvas" width="800" height="400" styleClass="game-canvas" visible="true" managed="true"/>
     </center>
 
     <bottom>
         <VBox spacing="15.0" styleClass="controls-container" visible="true" managed="true">
             <HBox spacing="10.0" alignment="CENTER" styleClass="button-container" visible="true" managed="true">
-                <Button fx:id="startStopButton" text="Démarrer" onAction="#onStartStopButtonClick" styleClass="control-button" visible="true" managed="true">
+                <Button fx:id="startStopButton" text="Démarrer" onAction="#onStartStopButtonClick" styleClass="control-button" visible="false" managed="false">
                     <tooltip>
                         <Tooltip text="Démarrer ou arrêter la simulation"/>
                     </tooltip>
                 </Button>
-                <Button fx:id="stepButton" text="Avancer d'un tour" onAction="#onStepButtonClick" styleClass="control-button" visible="true" managed="true">
+                <Button fx:id="stepButton" text="Avancer d'un tour" onAction="#onStepButtonClick" styleClass="control-button" visible="false" managed="false">
                     <tooltip>
                         <Tooltip text="Avancer d'une génération"/>
                     </tooltip>
                 </Button>
-                <Button fx:id="clearButton" text="Effacer" onAction="#onClearButtonClick" styleClass="control-button" visible="true" managed="true">
+                <Button fx:id="clearButton" text="Effacer" onAction="#onClearButtonClick" styleClass="control-button" visible="false" managed="false">
                     <tooltip>
                         <Tooltip text="Effacer toutes les cellules"/>
                     </tooltip>
                 </Button>
-                <Button fx:id="randomButton" text="Aléatoire" onAction="#onRandomButtonClick" styleClass="random-button" visible="true" managed="true">
+                <Button fx:id="randomButton" text="Aléatoire" onAction="#onRandomButtonClick" styleClass="random-button" visible="false" managed="false">
                     <tooltip>
                         <Tooltip text="Générer des cellules aléatoirement"/>
                     </tooltip>
                 </Button>
             </HBox>
 
-            <HBox spacing="10.0" alignment="CENTER" styleClass="slider-container" visible="true" managed="true">
+            <HBox spacing="10.0" alignment="CENTER" styleClass="slider-container" visible="false" managed="false">
                 <Label text="Vitesse:" styleClass="slider-label" visible="true" managed="true"/>
                 <Button text="-" onAction="#decreaseSpeed" styleClass="speed-button" visible="true" managed="true">
                     <tooltip>
@@ -80,7 +114,7 @@
                 <Label fx:id="speedValueLabel" text="10" styleClass="speed-value-label" visible="true" managed="true"/>
             </HBox>
 
-            <HBox spacing="10.0" alignment="CENTER" styleClass="slider-container" visible="true" managed="true">
+            <HBox spacing="10.0" alignment="CENTER" styleClass="slider-container" visible="false" managed="false">
                 <Label text="Zoom:" styleClass="slider-label" visible="true" managed="true"/>
                 <Button text="-" onAction="#decreaseZoom" styleClass="zoom-button" visible="true" managed="true">
                     <tooltip>
@@ -101,6 +135,11 @@
                         <Tooltip text="Réinitialiser le zoom"/>
                     </tooltip>
                 </Button>
+            </HBox>
+
+            <HBox spacing="10.0" alignment="CENTER" styleClass="generation-container" visible="true" managed="true">
+                <Label text="Générations:" styleClass="generation-label" visible="true" managed="true"/>
+                <Label fx:id="generationCountLabel" text="0" styleClass="generation-value-label" visible="true" managed="true"/>
             </HBox>
 
             <Label fx:id="statusLabel" styleClass="status-label" 

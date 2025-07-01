@@ -2,11 +2,15 @@ package illumination.jeudelavie;
 
 import javafx.animation.AnimationTimer;
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.Slider;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -14,528 +18,492 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.paint.Color;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
- * Controller for the Game of Life application.
+ * Contrôleur pour l'interface utilisateur du Jeu de la Vie.
+ * Gère les interactions utilisateur et la mise à jour de l'affichage.
  */
 public class GameOfLifeController {
-    @FXML
-    private Canvas gameCanvas;
 
-    @FXML
-    private Button startStopButton;
-
-    @FXML
-    private Button stepButton;
-
-    @FXML
-    private Button clearButton;
-
-    @FXML
-    private Slider speedSlider;
-
-    @FXML
-    private Label speedValueLabel;
-
-    @FXML
-    private Slider zoomSlider;
-
-    @FXML
-    private Label zoomValueLabel;
-
-    @FXML
-    private Label statusLabel;
-
-    @FXML
-    private BorderPane rootPane;
+    @FXML private BorderPane rootPane;
+    @FXML private Canvas gameCanvas;
+    @FXML private Button startStopButton;
+    @FXML private Button stepButton;
+    @FXML private Button clearButton;
+    @FXML private Button randomButton;
+    @FXML private MenuItem startStopMenuItem;
+    @FXML private MenuItem stepMenuItem;
+    @FXML private Slider speedSlider;
+    @FXML private Label speedValueLabel;
+    @FXML private Slider zoomSlider;
+    @FXML private Label zoomValueLabel;
+    @FXML private Label statusLabel;
 
     private GameOfLife gameOfLife;
-    private boolean isRunning = false;
     private AnimationTimer gameLoop;
-    private long lastUpdate = 0;
-    private int cellSize = 8; // Default cell size, will be updated by zoom
-    private int generationCount = 0;
-    private int lastCellRow = -1;
-    private int lastCellCol = -1;
+    private boolean isRunning = false;
+    private double cellSize = 8.0; // Taille initiale des cellules
+    private double offsetX = 0.0;  // Décalage X pour le panoramique
+    private double offsetY = 0.0;  // Décalage Y pour le panoramique
+    private double lastX = 0.0;    // Dernière position X de la souris pour le panoramique
+    private double lastY = 0.0;    // Dernière position Y de la souris pour le panoramique
+    private boolean isPanning = false; // Indique si l'utilisateur est en train de faire un panoramique
+    private long lastUpdateTime = 0; // Temps de la dernière mise à jour
+    private int frameCount = 0;    // Compteur de frames pour limiter la fréquence de mise à jour
+    private int generationCount = 0; // Compteur de générations
+    @FXML private Label generationCountLabel; // Étiquette pour afficher le nombre de générations
 
-    // Selection variables
-    private boolean isSelecting = false;
-    private int selectionStartRow = -1;
-    private int selectionStartCol = -1;
-    private int selectionEndRow = -1;
-    private int selectionEndCol = -1;
-    private boolean[][] clipboardCells = null;
-
+    /**
+     * Initialise le contrôleur après le chargement du FXML.
+     */
     @FXML
     public void initialize() {
-        // Make the canvas resize with the window
-        gameCanvas.widthProperty().bind(rootPane.widthProperty().subtract(20));
-        gameCanvas.heightProperty().bind(rootPane.heightProperty().subtract(150));
+        // Initialiser le modèle avec une taille basée sur la taille du canvas
+        int gridWidth = (int) (gameCanvas.getWidth() / cellSize);
+        int gridHeight = (int) (gameCanvas.getHeight() / cellSize);
+        gameOfLife = new GameOfLife(gridWidth, gridHeight);
 
-        // Listen for canvas size changes and update the grid
-        gameCanvas.widthProperty().addListener((obs, oldVal, newVal) -> resetGrid());
-        gameCanvas.heightProperty().addListener((obs, oldVal, newVal) -> resetGrid());
+        // Configurer les écouteurs d'événements pour le canvas
+        setupCanvasEvents();
 
-        // Initialize the game model with initial grid dimensions
-        resetGrid();
+        // Configurer les écouteurs pour les sliders
+        setupSliders();
 
-        // Set up mouse event handlers for the canvas
-        gameCanvas.setOnMousePressed(this::handleMousePressed);
-        gameCanvas.setOnMouseDragged(this::handleMouseDragged);
-        gameCanvas.setOnMouseReleased(this::handleMouseReleased);
+        // Configurer la boucle de jeu
+        setupGameLoop();
 
-        // Set up key event handlers for the canvas
-        gameCanvas.setFocusTraversable(true);
-        gameCanvas.addEventHandler(KeyEvent.KEY_PRESSED, this::handleKeyPressed);
-        gameCanvas.addEventHandler(KeyEvent.KEY_RELEASED, this::handleKeyReleased);
+        // Dessiner la grille initiale
+        drawGrid();
 
-        // Set up the game loop with Platform.runLater to ensure UI updates
-        gameLoop = new AnimationTimer() {
-            @Override
-            public void handle(long now) {
-                // Calculate time since last update
-                if (lastUpdate == 0) {
-                    lastUpdate = now;
-                    return;
-                }
+        // Mettre à jour les étiquettes
+        updateLabels();
+    }
 
-                // Get the speed from the slider (invert it so higher values mean faster)
-                double speed = speedSlider.getMax() - speedSlider.getValue() + speedSlider.getMin();
+    /**
+     * Configure les écouteurs d'événements pour le canvas.
+     */
+    private void setupCanvasEvents() {
+        // Clic de souris pour ajouter/supprimer des cellules
+        gameCanvas.setOnMouseClicked(this::handleCanvasClick);
 
-                // Calculate the update interval in nanoseconds
-                long updateInterval = (long) (1_000_000_000 / speed);
-
-                if (now - lastUpdate >= updateInterval) {
-                    // Use Platform.runLater to ensure UI updates properly
-                    Platform.runLater(() -> {
-                        gameOfLife.nextGeneration();
-                        generationCount++;
-                        updateStatusLabel();
-                        drawGrid();
-                    });
-                    lastUpdate = now;
-                }
+        // Gestion du panoramique (déplacement de la vue)
+        gameCanvas.setOnMousePressed(event -> {
+            // Activer le panoramique uniquement si la touche Ctrl est enfoncée
+            if (event.isControlDown()) {
+                isPanning = true;
+                lastX = event.getX();
+                lastY = event.getY();
             }
-        };
+        });
 
-        // Apply styling to UI elements
-        applyStyles();
+        gameCanvas.setOnMouseDragged(event -> {
+            if (isPanning) {
+                double deltaX = event.getX() - lastX;
+                double deltaY = event.getY() - lastY;
+                offsetX += deltaX;
+                offsetY += deltaY;
+                lastX = event.getX();
+                lastY = event.getY();
 
-        // Initialize status label
-        updateStatusLabel();
+                // Vérifier si l'utilisateur panne près des bords et agrandir la grille si nécessaire
+                checkAndExpandGrid();
 
-        // Initialize speed value label and add listener to keep it in sync with slider
-        updateSpeedValueLabel();
-        speedSlider.valueProperty().addListener((obs, oldVal, newVal) -> updateSpeedValueLabel());
+                drawGrid();
+            }
+        });
 
-        // Initialize zoom value label and add listener to keep it in sync with slider
-        updateZoomValueLabel();
-        zoomSlider.valueProperty().addListener((obs, oldVal, newVal) -> {
-            updateZoomValueLabel();
-            updateCellSize();
-            resetGrid();
+        gameCanvas.setOnMouseReleased(event -> {
+            isPanning = false;
+        });
+
+        // Ajouter des écouteurs pour les touches du clavier
+        rootPane.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.CONTROL) {
+                gameCanvas.setCursor(javafx.scene.Cursor.MOVE);
+            }
+        });
+
+        rootPane.setOnKeyReleased(event -> {
+            if (event.getCode() == KeyCode.CONTROL) {
+                gameCanvas.setCursor(javafx.scene.Cursor.DEFAULT);
+            }
         });
     }
 
     /**
-     * Updates the speed value label to match the current slider value.
+     * Configure les écouteurs pour les sliders.
      */
-    private void updateSpeedValueLabel() {
-        int speedValue = (int) speedSlider.getValue();
-        speedValueLabel.setText(String.valueOf(speedValue));
+    private void setupSliders() {
+        // Slider de vitesse
+        speedSlider.valueProperty().addListener((observable, oldValue, newValue) -> {
+            speedValueLabel.setText(String.format("%.0f", newValue));
+        });
+
+        // Slider de zoom
+        zoomSlider.valueProperty().addListener((observable, oldValue, newValue) -> {
+            cellSize = newValue.doubleValue();
+            zoomValueLabel.setText(String.format("%.0f", cellSize));
+
+            // Redimensionner la grille en fonction du zoom
+            resizeGrid();
+
+            // Redessiner la grille
+            drawGrid();
+        });
     }
 
     /**
-     * Decreases the simulation speed by decrementing the slider value.
+     * Configure la boucle de jeu pour les mises à jour automatiques.
+     */
+    private void setupGameLoop() {
+        gameLoop = new AnimationTimer() {
+            @Override
+            public void handle(long now) {
+                // Limiter la fréquence de mise à jour en fonction du slider de vitesse
+                if (now - lastUpdateTime > 1_000_000_000 / speedSlider.getValue()) {
+                    gameOfLife.nextGeneration();
+                    generationCount++;
+                    updateGenerationLabel();
+                    drawGrid();
+                    lastUpdateTime = now;
+                }
+            }
+        };
+    }
+
+    /**
+     * Gère le clic sur le bouton ou menu Démarrer/Arrêter.
      */
     @FXML
-    protected void decreaseSpeed() {
-        double currentValue = speedSlider.getValue();
-        if (currentValue > speedSlider.getMin()) {
-            speedSlider.setValue(currentValue - 1);
-        }
-    }
-
-    /**
-     * Increases the simulation speed by incrementing the slider value.
-     */
-    @FXML
-    protected void increaseSpeed() {
-        double currentValue = speedSlider.getValue();
-        if (currentValue < speedSlider.getMax()) {
-            speedSlider.setValue(currentValue + 1);
-        }
-    }
-
-    /**
-     * Updates the zoom value label to match the current slider value.
-     */
-    private void updateZoomValueLabel() {
-        int zoomValue = (int) zoomSlider.getValue();
-        zoomValueLabel.setText(String.valueOf(zoomValue));
-    }
-
-    /**
-     * Updates the cell size based on the zoom slider value.
-     */
-    private void updateCellSize() {
-        cellSize = (int) zoomSlider.getValue();
-    }
-
-    /**
-     * Decreases the zoom level by decrementing the slider value.
-     */
-    @FXML
-    protected void decreaseZoom() {
-        double currentValue = zoomSlider.getValue();
-        if (currentValue > zoomSlider.getMin()) {
-            zoomSlider.setValue(currentValue - 1);
-        }
-    }
-
-    /**
-     * Increases the zoom level by incrementing the slider value.
-     */
-    @FXML
-    protected void increaseZoom() {
-        double currentValue = zoomSlider.getValue();
-        if (currentValue < zoomSlider.getMax()) {
-            zoomSlider.setValue(currentValue + 1);
-        }
-    }
-
-    /**
-     * Resets the zoom level to the default value (8).
-     */
-    @FXML
-    protected void resetZoom() {
-        zoomSlider.setValue(8);
-    }
-
-    /**
-     * Apply styling to UI elements for better aesthetics
-     */
-    private void applyStyles() {
-        // No need to set inline styles as they are defined in the CSS file
-        // This method is kept for potential future styling needs
-    }
-
-    /**
-     * Resets the grid when the canvas size changes.
-     */
-    private void resetGrid() {
-        // Calculate grid dimensions based on canvas size
-        int rows = (int) (gameCanvas.getHeight() / cellSize);
-        int cols = (int) (gameCanvas.getWidth() / cellSize);
-
-        // Ensure we have at least one row and column
-        rows = Math.max(rows, 1);
-        cols = Math.max(cols, 1);
-
-        // Initialize the game model
-        gameOfLife = new GameOfLife(rows, cols);
-        generationCount = 0;
-        updateStatusLabel();
-
-        // Draw the initial grid
-        drawGrid();
-    }
-
-    /**
-     * Updates the status label with the current generation count.
-     */
-    private void updateStatusLabel() {
-        statusLabel.setText("Génération: " + generationCount + 
-                " | Grille: " + gameOfLife.getRows() + "×" + gameOfLife.getColumns() + 
-                " | Ctrl+clic pour sélectionner | C pour copier | V pour coller");
-    }
-
-    @FXML
-    protected void onStartStopButtonClick() {
+    private void onStartStopButtonClick() {
         isRunning = !isRunning;
 
         if (isRunning) {
             startStopButton.setText("Arrêter");
-            stepButton.setDisable(true);
+            startStopMenuItem.setText("Arrêter");
             gameLoop.start();
+            stepButton.setDisable(true);
+            stepMenuItem.setDisable(true);
         } else {
             startStopButton.setText("Démarrer");
-            stepButton.setDisable(false);
+            startStopMenuItem.setText("Démarrer");
             gameLoop.stop();
+            stepButton.setDisable(false);
+            stepMenuItem.setDisable(false);
         }
+
+        updateStatusLabel();
     }
 
+    /**
+     * Gère le clic sur le menu Quitter.
+     */
     @FXML
-    protected void onStepButtonClick() {
+    private void onExitMenuItemClick() {
+        Platform.exit();
+    }
+
+    /**
+     * Gère le clic sur le menu À propos.
+     */
+    @FXML
+    private void onAboutMenuItemClick() {
+        Alert alert = new Alert(AlertType.INFORMATION);
+        alert.setTitle("À propos du Jeu de la Vie");
+        alert.setHeaderText("Jeu de la Vie de Conway");
+        alert.setContentText("Implémentation du célèbre automate cellulaire inventé par John Conway en 1970.");
+        alert.showAndWait();
+    }
+
+    /**
+     * Gère le clic sur le menu Règles du jeu.
+     */
+    @FXML
+    private void onRulesMenuItemClick() {
+        Alert alert = new Alert(AlertType.INFORMATION);
+        alert.setTitle("Règles du Jeu de la Vie");
+        alert.setHeaderText("Règles du Jeu de la Vie");
+        alert.setContentText(
+                "Le Jeu de la Vie est un automate cellulaire imaginé par John Horton Conway en 1970.\n\n" +
+                "Règles:\n" +
+                "1. Une cellule morte avec exactement 3 voisines vivantes devient vivante (elle naît).\n" +
+                "2. Une cellule vivante avec 2 ou 3 voisines vivantes reste vivante (elle survit).\n" +
+                "3. Dans tous les autres cas, une cellule meurt ou reste morte (par solitude ou surpopulation).\n\n" +
+                "Utilisation:\n" +
+                "- Cliquez sur la grille pour ajouter/supprimer des cellules.\n" +
+                "- Maintenez la touche Ctrl enfoncée pour déplacer la vue.\n" +
+                "- Utilisez les contrôles de zoom et de vitesse dans le menu Options.\n" +
+                "- Démarrez/arrêtez la simulation avec le menu Simulation.");
+        alert.showAndWait();
+    }
+
+    /**
+     * Gère le clic sur le bouton Avancer d'un tour.
+     */
+    @FXML
+    private void onStepButtonClick() {
         gameOfLife.nextGeneration();
         generationCount++;
-        updateStatusLabel();
         drawGrid();
+        updateGenerationLabel();
+        updateStatusLabel();
     }
 
+    /**
+     * Gère le clic sur le bouton Effacer.
+     */
     @FXML
-    protected void onClearButtonClick() {
-        gameOfLife.clearGrid();
+    private void onClearButtonClick() {
+        gameOfLife.clear();
         generationCount = 0;
+        drawGrid();
+        updateGenerationLabel();
         updateStatusLabel();
-        drawGrid();
     }
 
     /**
-     * Randomly populates the grid with live cells.
+     * Gère le clic sur le bouton Aléatoire.
      */
     @FXML
-    protected void onRandomButtonClick() {
-        // Use a moderate density (0.3 = 30% of cells will be alive)
-        gameOfLife.randomizeGrid(0.3);
-        generationCount = 0;
+    private void onRandomButtonClick() {
+        gameOfLife.randomize(0.3); // 30% de cellules vivantes
+        drawGrid();
         updateStatusLabel();
+    }
+
+    /**
+     * Gère le clic sur le bouton - de la vitesse.
+     */
+    @FXML
+    private void decreaseSpeed() {
+        double value = speedSlider.getValue();
+        if (value > speedSlider.getMin()) {
+            speedSlider.setValue(value - 1);
+        }
+    }
+
+    /**
+     * Gère le clic sur le bouton + de la vitesse.
+     */
+    @FXML
+    private void increaseSpeed() {
+        double value = speedSlider.getValue();
+        if (value < speedSlider.getMax()) {
+            speedSlider.setValue(value + 1);
+        }
+    }
+
+    /**
+     * Gère le clic sur le bouton - du zoom.
+     */
+    @FXML
+    private void decreaseZoom() {
+        double value = zoomSlider.getValue();
+        if (value > zoomSlider.getMin()) {
+            zoomSlider.setValue(value - 1);
+        }
+    }
+
+    /**
+     * Gère le clic sur le bouton + du zoom.
+     */
+    @FXML
+    private void increaseZoom() {
+        double value = zoomSlider.getValue();
+        if (value < zoomSlider.getMax()) {
+            zoomSlider.setValue(value + 1);
+        }
+    }
+
+    /**
+     * Gère le clic sur le bouton Reset du zoom.
+     */
+    @FXML
+    private void resetZoom() {
+        zoomSlider.setValue(8); // Valeur par défaut
+        offsetX = 0;
+        offsetY = 0;
         drawGrid();
     }
 
     /**
-     * Adds a glider pattern at the specified position.
+     * Gère le clic sur le canvas pour ajouter/supprimer des cellules.
      */
-    @FXML
-    protected void onAddGliderButtonClick() {
-        // Add a glider pattern at the center of the grid
-        int centerRow = gameOfLife.getRows() / 2;
-        int centerCol = gameOfLife.getColumns() / 2;
+    private void handleCanvasClick(MouseEvent event) {
+        if (!event.isControlDown()) { // Pas la touche Ctrl (utilisée pour le panoramique)
+            int gridX = (int) ((event.getX() - offsetX) / cellSize);
+            int gridY = (int) ((event.getY() - offsetY) / cellSize);
 
-        // Clear the area first
-        for (int i = -1; i <= 1; i++) {
-            for (int j = -1; j <= 1; j++) {
-                gameOfLife.setCellState(centerRow + i, centerCol + j, false);
+            // Vérifier si les coordonnées sont dans les limites de la grille
+            if (gridX >= 0 && gridX < gameOfLife.getWidth() && 
+                gridY >= 0 && gridY < gameOfLife.getHeight()) {
+
+                gameOfLife.toggleCell(gridX, gridY);
+                drawGrid();
+                updateStatusLabel();
             }
         }
-
-        // Create a glider pattern
-        gameOfLife.setCellState(centerRow - 1, centerCol, true);
-        gameOfLife.setCellState(centerRow, centerCol + 1, true);
-        gameOfLife.setCellState(centerRow + 1, centerCol - 1, true);
-        gameOfLife.setCellState(centerRow + 1, centerCol, true);
-        gameOfLife.setCellState(centerRow + 1, centerCol + 1, true);
-
-        drawGrid();
     }
 
     /**
-     * Adds an oscillator pattern at the specified position.
+     * Redimensionne la grille en fonction de la taille du canvas et du zoom.
+     * Cette méthode est appelée lors de l'initialisation et lors du zoom.
      */
-    @FXML
-    protected void onAddOscillatorButtonClick() {
-        // Add a blinker (period 2 oscillator) at the center of the grid
-        int centerRow = gameOfLife.getRows() / 2;
-        int centerCol = gameOfLife.getColumns() / 2;
+    private void resizeGrid() {
+        // Calculer la nouvelle taille de la grille en fonction de la taille du canvas et du zoom
+        int newWidth = Math.max(1, (int) (gameCanvas.getWidth() / cellSize));
+        int newHeight = Math.max(1, (int) (gameCanvas.getHeight() / cellSize));
 
-        // Clear the area first
-        for (int i = -2; i <= 2; i++) {
-            for (int j = -2; j <= 2; j++) {
-                gameOfLife.setCellState(centerRow + i, centerCol + j, false);
+        // Redimensionner seulement si nécessaire
+        if (newWidth != gameOfLife.getWidth() || newHeight != gameOfLife.getHeight()) {
+            gameOfLife.resize(newWidth, newHeight);
+        }
+    }
+
+    /**
+     * Vérifie si l'utilisateur panne près des bords et agrandit la grille si nécessaire.
+     * Cette méthode est appelée lors du panoramique pour s'assurer que la grille est suffisamment grande.
+     */
+    private void checkAndExpandGrid() {
+        // Calculer les coordonnées de la grille visibles à l'écran
+        int minVisibleX = (int) Math.floor(-offsetX / cellSize);
+        int minVisibleY = (int) Math.floor(-offsetY / cellSize);
+        int maxVisibleX = (int) Math.ceil((gameCanvas.getWidth() - offsetX) / cellSize);
+        int maxVisibleY = (int) Math.ceil((gameCanvas.getHeight() - offsetY) / cellSize);
+
+        // Marge pour déclencher l'expansion (en nombre de cellules)
+        int margin = 5;
+
+        // Limites maximales pour la taille de la grille
+        int maxGridWidth = 1000;  // Limite raisonnable pour éviter les problèmes de mémoire
+        int maxGridHeight = 1000; // Limite raisonnable pour éviter les problèmes de mémoire
+
+        // Vérifier si nous sommes près des bords et agrandir si nécessaire
+        int currentWidth = gameOfLife.getWidth();
+        int currentHeight = gameOfLife.getHeight();
+        int newWidth = currentWidth;
+        int newHeight = currentHeight;
+
+        // Vérifier le bord gauche
+        if (minVisibleX < margin) {
+            int expansion = Math.min(margin - minVisibleX, maxGridWidth - currentWidth);
+            if (expansion > 0) {
+                newWidth += expansion;
+                offsetX += expansion * cellSize; // Ajuster le décalage pour maintenir la vue
             }
         }
 
-        // Create a blinker pattern (vertical line of 3 cells)
-        gameOfLife.setCellState(centerRow - 1, centerCol, true);
-        gameOfLife.setCellState(centerRow, centerCol, true);
-        gameOfLife.setCellState(centerRow + 1, centerCol, true);
-
-        drawGrid();
-    }
-
-    private void handleMousePressed(MouseEvent event) {
-        // Convert mouse coordinates to grid coordinates
-        int col = (int) (event.getX() / cellSize);
-        int row = (int) (event.getY() / cellSize);
-
-        // Check if Ctrl is pressed for selection
-        if (event.isControlDown()) {
-            // Start selection
-            isSelecting = true;
-            selectionStartRow = row;
-            selectionStartCol = col;
-            selectionEndRow = row;
-            selectionEndCol = col;
-        } else {
-            // Set cell state to alive (not toggle) to prevent disappearing
-            gameOfLife.setCellState(row, col, true);
-            lastCellRow = row;
-            lastCellCol = col;
-        }
-
-        // Redraw the grid
-        drawGrid();
-    }
-
-    private void handleMouseDragged(MouseEvent event) {
-        // Convert mouse coordinates to grid coordinates
-        int col = (int) (event.getX() / cellSize);
-        int row = (int) (event.getY() / cellSize);
-
-        if (isSelecting) {
-            // Update selection end point
-            selectionEndRow = row;
-            selectionEndCol = col;
-        } else if (row != lastCellRow || col != lastCellCol) {
-            // Set cell state to alive (not toggle) to prevent disappearing
-            gameOfLife.setCellState(row, col, true);
-            lastCellRow = row;
-            lastCellCol = col;
-        }
-
-        // Redraw the grid
-        drawGrid();
-    }
-
-    private void handleMouseReleased(MouseEvent event) {
-        if (isSelecting) {
-            // Finalize selection
-            drawGrid();
-        }
-    }
-
-    private void handleKeyPressed(KeyEvent event) {
-        if (event.isControlDown() && event.getCode() == KeyCode.C) {
-            // Copy selected cells
-            copySelectedCells();
-        } else if (event.isControlDown() && event.getCode() == KeyCode.V) {
-            // Paste copied cells
-            pasteSelectedCells(lastCellRow, lastCellCol);
-        }
-    }
-
-    private void handleKeyReleased(KeyEvent event) {
-        // Reset selection if Ctrl is released
-        if (!event.isControlDown() && isSelecting) {
-            isSelecting = false;
-            drawGrid();
-        }
-    }
-
-    private void copySelectedCells() {
-        if (selectionStartRow < 0 || selectionStartCol < 0) return;
-
-        // Normalize selection coordinates
-        int startRow = Math.min(selectionStartRow, selectionEndRow);
-        int endRow = Math.max(selectionStartRow, selectionEndRow);
-        int startCol = Math.min(selectionStartCol, selectionEndCol);
-        int endCol = Math.max(selectionStartCol, selectionEndCol);
-
-        int rows = endRow - startRow + 1;
-        int cols = endCol - startCol + 1;
-
-        // Create clipboard
-        clipboardCells = new boolean[rows][cols];
-
-        // Copy cells to clipboard
-        for (int r = 0; r < rows; r++) {
-            for (int c = 0; c < cols; c++) {
-                clipboardCells[r][c] = gameOfLife.getCellState(startRow + r, startCol + c);
+        // Vérifier le bord supérieur
+        if (minVisibleY < margin) {
+            int expansion = Math.min(margin - minVisibleY, maxGridHeight - currentHeight);
+            if (expansion > 0) {
+                newHeight += expansion;
+                offsetY += expansion * cellSize; // Ajuster le décalage pour maintenir la vue
             }
         }
 
-        statusLabel.setText("Cellules copiées: " + rows + "×" + cols);
-    }
-
-    private void pasteSelectedCells(int targetRow, int targetCol) {
-        if (clipboardCells == null) return;
-
-        int rows = clipboardCells.length;
-        int cols = clipboardCells[0].length;
-
-        // Paste cells from clipboard
-        for (int r = 0; r < rows; r++) {
-            for (int c = 0; c < cols; c++) {
-                gameOfLife.setCellState(targetRow + r, targetCol + c, clipboardCells[r][c]);
-            }
+        // Vérifier le bord droit
+        if (maxVisibleX > currentWidth - margin) {
+            newWidth = Math.min(Math.max(newWidth, maxVisibleX + margin), maxGridWidth);
         }
 
-        drawGrid();
-        statusLabel.setText("Cellules collées à la position (" + targetRow + "," + targetCol + ")");
+        // Vérifier le bord inférieur
+        if (maxVisibleY > currentHeight - margin) {
+            newHeight = Math.min(Math.max(newHeight, maxVisibleY + margin), maxGridHeight);
+        }
+
+        // Redimensionner la grille si nécessaire et si les nouvelles dimensions sont raisonnables
+        if ((newWidth != currentWidth || newHeight != currentHeight) && 
+            newWidth <= maxGridWidth && newHeight <= maxGridHeight) {
+            try {
+                gameOfLife.resize(newWidth, newHeight);
+            } catch (Exception e) {
+                // En cas d'erreur lors du redimensionnement, afficher un message dans la console
+                // et continuer sans redimensionner
+                System.err.println("Erreur lors du redimensionnement de la grille: " + e.getMessage());
+
+                // Mettre à jour le statut pour informer l'utilisateur
+                statusLabel.setText("Limite de taille de grille atteinte. Impossible d'agrandir davantage.");
+            }
+        }
     }
 
+    /**
+     * Dessine la grille sur le canvas.
+     */
     private void drawGrid() {
         GraphicsContext gc = gameCanvas.getGraphicsContext2D();
 
-        // Clear the canvas
-        gc.clearRect(0, 0, gameCanvas.getWidth(), gameCanvas.getHeight());
-
-        // Draw background with a dark color
-        gc.setFill(new Color(0.12, 0.15, 0.18, 1.0)); // Dark background color (#1e272e)
+        // Effacer le canvas
+        gc.setFill(Color.BLACK);
         gc.fillRect(0, 0, gameCanvas.getWidth(), gameCanvas.getHeight());
 
-        // Draw the grid lines with a more subtle color for dark theme
-        gc.setStroke(new Color(0.3, 0.3, 0.3, 0.5));
-        gc.setLineWidth(0.5);
+        // Dessiner les cellules vivantes
+        gc.setFill(Color.LIGHTGREEN);
 
-        // Draw horizontal grid lines
-        for (int i = 0; i <= gameOfLife.getRows(); i++) {
-            double y = i * cellSize;
-            gc.strokeLine(0, y, gameCanvas.getWidth(), y);
-        }
+        for (int x = 0; x < gameOfLife.getWidth(); x++) {
+            for (int y = 0; y < gameOfLife.getHeight(); y++) {
+                if (gameOfLife.isAlive(x, y)) {
+                    double screenX = x * cellSize + offsetX;
+                    double screenY = y * cellSize + offsetY;
 
-        // Draw vertical grid lines
-        for (int i = 0; i <= gameOfLife.getColumns(); i++) {
-            double x = i * cellSize;
-            gc.strokeLine(x, 0, x, gameCanvas.getHeight());
-        }
+                    // Ne dessiner que les cellules visibles
+                    if (screenX + cellSize >= 0 && screenX < gameCanvas.getWidth() &&
+                        screenY + cellSize >= 0 && screenY < gameCanvas.getHeight()) {
 
-        // Draw the cells with a bright color for better visibility on dark background
-        gc.setFill(new Color(0.3, 0.8, 1.0, 0.9)); // Bright cyan color
-
-        for (int row = 0; row < gameOfLife.getRows(); row++) {
-            for (int col = 0; col < gameOfLife.getColumns(); col++) {
-                if (gameOfLife.getCellState(row, col)) {
-                    // Draw cells with slightly rounded corners and smaller size for a nicer look
-                    double cellPadding = 0.5;
-                    double cellX = col * cellSize + cellPadding;
-                    double cellY = row * cellSize + cellPadding;
-                    double cellWidth = cellSize - (2 * cellPadding);
-                    double cellHeight = cellSize - (2 * cellPadding);
-
-                    // Draw rounded rectangle for each cell
-                    gc.fillRoundRect(cellX, cellY, cellWidth, cellHeight, 2, 2);
+                        gc.fillRect(screenX, screenY, cellSize - 1, cellSize - 1);
+                    }
                 }
             }
         }
 
-        // Draw selection rectangle if selecting
-        if (isSelecting) {
-            // Normalize selection coordinates
-            int startRow = Math.min(selectionStartRow, selectionEndRow);
-            int endRow = Math.max(selectionStartRow, selectionEndRow);
-            int startCol = Math.min(selectionStartCol, selectionEndCol);
-            int endCol = Math.max(selectionStartCol, selectionEndCol);
+        // Dessiner la grille si le zoom est suffisamment grand
+        if (cellSize >= 4) {
+            gc.setStroke(Color.DARKGRAY);
+            gc.setLineWidth(0.5);
 
-            // Calculate pixel coordinates
-            double startX = startCol * cellSize;
-            double startY = startRow * cellSize;
-            double width = (endCol - startCol + 1) * cellSize;
-            double height = (endRow - startRow + 1) * cellSize;
+            // Lignes horizontales
+            for (int y = 0; y <= gameOfLife.getHeight(); y++) {
+                double screenY = y * cellSize + offsetY;
+                if (screenY >= 0 && screenY <= gameCanvas.getHeight()) {
+                    gc.strokeLine(0, screenY, gameCanvas.getWidth(), screenY);
+                }
+            }
 
-            // Draw semi-transparent blue rectangle with a gradient
-            gc.setFill(new Color(0.2, 0.4, 0.8, 0.2));
-            gc.fillRoundRect(startX, startY, width, height, 6, 6);
-
-            // Draw animated dashed selection border
-            gc.setStroke(new Color(0.2, 0.6, 1.0, 0.8));
-            gc.setLineWidth(2);
-            gc.setLineDashes(5, 5);
-            gc.setLineDashOffset((System.currentTimeMillis() / 100) % 10);
-            gc.strokeRoundRect(startX, startY, width, height, 6, 6);
-
-            // Reset line dashes for future drawing operations
-            gc.setLineDashes(null);
+            // Lignes verticales
+            for (int x = 0; x <= gameOfLife.getWidth(); x++) {
+                double screenX = x * cellSize + offsetX;
+                if (screenX >= 0 && screenX <= gameCanvas.getWidth()) {
+                    gc.strokeLine(screenX, 0, screenX, gameCanvas.getHeight());
+                }
+            }
         }
     }
 
-    public Button getClearButton() {
-        return clearButton;
+    /**
+     * Met à jour les étiquettes d'information.
+     */
+    private void updateLabels() {
+        speedValueLabel.setText(String.format("%.0f", speedSlider.getValue()));
+        zoomValueLabel.setText(String.format("%.0f", zoomSlider.getValue()));
+        updateGenerationLabel();
+        updateStatusLabel();
     }
 
-    public void setClearButton(Button clearButton) {
-        this.clearButton = clearButton;
+    /**
+     * Met à jour l'étiquette du compteur de générations.
+     */
+    private void updateGenerationLabel() {
+        generationCountLabel.setText(String.valueOf(generationCount));
+    }
+
+    /**
+     * Met à jour l'étiquette de statut.
+     */
+    private void updateStatusLabel() {
+        if (isRunning) {
+            statusLabel.setText("Simulation en cours... Cliquez sur 'Arrêter' pour mettre en pause.");
+        } else {
+            statusLabel.setText("Cliquez sur la grille pour ajouter/supprimer des cellules. Maintenez la touche Ctrl pour déplacer la vue.");
+        }
     }
 }

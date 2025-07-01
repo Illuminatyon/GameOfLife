@@ -1,0 +1,319 @@
+/* Main application styles */
+.root {
+    -fx-font-family: 'Segoe UI', Arial, sans-serif;
+    -fx-background-color: linear-gradient(to bottom, #1a2a3a, #2c3e50);
+    -fx-background-radius: 0;
+}
+
+/* Title styles */
+.title-label {
+    -fx-text-fill: #ecf0f1;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 5, 0, 0, 1);
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+}
+
+.subtitle-label {
+    -fx-text-fill: #bdc3c7;
+    -fx-font-style: italic;
+    -fx-font-size: 16px;
+    -fx-opacity: 0.9;
+}
+
+/* Canvas styles */
+.game-canvas {
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.4), 15, 0, 0, 0);
+    -fx-background-color: #1e272e; /* Dark background for the canvas */
+    -fx-background-radius: 8px;
+    -fx-border-color: #3498db;
+    -fx-border-width: 2px;
+    -fx-border-radius: 8px;
+}
+
+/* Control button styles */
+.control-button {
+    -fx-background-color: linear-gradient(to bottom, #3498db, #2980b9);
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+    -fx-padding: 10px 20px;
+    -fx-background-radius: 6px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 5, 0, 0, 0);
+    -fx-transition: all 0.3s ease;
+}
+
+.control-button:hover {
+    -fx-background-color: linear-gradient(to bottom, #2980b9, #2471a3);
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.4), 8, 0, 0, 0);
+    -fx-scale-x: 1.05;
+    -fx-scale-y: 1.05;
+}
+
+.control-button:pressed {
+    -fx-background-color: #2471a3;
+    -fx-scale-x: 0.98;
+    -fx-scale-y: 0.98;
+}
+
+/* Pattern button styles */
+.pattern-button {
+    -fx-background-color: linear-gradient(to bottom, #2ecc71, #27ae60);
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+    -fx-padding: 10px 20px;
+    -fx-background-radius: 6px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 5, 0, 0, 0);
+    -fx-transition: all 0.3s ease;
+}
+
+.pattern-button:hover {
+    -fx-background-color: linear-gradient(to bottom, #27ae60, #219653);
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.4), 8, 0, 0, 0);
+    -fx-scale-x: 1.05;
+    -fx-scale-y: 1.05;
+}
+
+.pattern-button:pressed {
+    -fx-background-color: #219653;
+    -fx-scale-x: 0.98;
+    -fx-scale-y: 0.98;
+}
+
+/* Random button styles */
+.random-button {
+    -fx-background-color: linear-gradient(to bottom, #f39c12, #d35400);
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+    -fx-padding: 10px 20px;
+    -fx-background-radius: 6px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 5, 0, 0, 0);
+    -fx-transition: all 0.3s ease;
+}
+
+.random-button:hover {
+    -fx-background-color: linear-gradient(to bottom, #e67e22, #d35400);
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.4), 8, 0, 0, 0);
+    -fx-scale-x: 1.05;
+    -fx-scale-y: 1.05;
+}
+
+.random-button:pressed {
+    -fx-background-color: #d35400;
+    -fx-scale-x: 0.98;
+    -fx-scale-y: 0.98;
+}
+
+/* Slider styles */
+.slider-container {
+    -fx-padding: 10px;
+    -fx-background-color: rgba(236, 240, 241, 0.1);
+    -fx-background-radius: 8px;
+    -fx-border-color: rgba(255, 255, 255, 0.1);
+    -fx-border-radius: 8px;
+}
+
+.slider-label {
+    -fx-font-weight: bold;
+    -fx-text-fill: #ecf0f1;
+    -fx-font-size: 14px;
+}
+
+.speed-slider {
+    -fx-pref-height: 30px;
+}
+
+.speed-slider .track {
+    -fx-background-color: rgba(189, 195, 199, 0.3);
+    -fx-background-radius: 4px;
+    -fx-pref-height: 8px;
+}
+
+.speed-slider .thumb {
+    -fx-background-color: #3498db;
+    -fx-background-radius: 50%;
+    -fx-pref-height: 18px;
+    -fx-pref-width: 18px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 5, 0, 0, 0);
+}
+
+.speed-slider .thumb:hover {
+    -fx-background-color: #2980b9;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.5), 8, 0, 0, 0);
+    -fx-scale-x: 1.1;
+    -fx-scale-y: 1.1;
+}
+
+/* Speed button styles */
+.speed-button {
+    -fx-background-color: linear-gradient(to bottom, #3498db, #2980b9);
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+    -fx-padding: 5px 10px;
+    -fx-background-radius: 50%;
+    -fx-min-width: 30px;
+    -fx-min-height: 30px;
+    -fx-max-width: 30px;
+    -fx-max-height: 30px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 3, 0, 0, 0);
+    -fx-transition: all 0.2s ease;
+}
+
+.speed-button:hover {
+    -fx-background-color: linear-gradient(to bottom, #2980b9, #2471a3);
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.4), 5, 0, 0, 0);
+    -fx-scale-x: 1.1;
+    -fx-scale-y: 1.1;
+}
+
+.speed-button:pressed {
+    -fx-background-color: #2471a3;
+    -fx-scale-x: 0.95;
+    -fx-scale-y: 0.95;
+}
+
+/* Speed value label styles */
+.speed-value-label {
+    -fx-text-fill: #ecf0f1;
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+    -fx-background-color: rgba(52, 152, 219, 0.3);
+    -fx-background-radius: 4px;
+    -fx-padding: 3px 8px;
+    -fx-min-width: 30px;
+    -fx-alignment: center;
+}
+
+/* Zoom button styles */
+.zoom-button {
+    -fx-background-color: linear-gradient(to bottom, #9b59b6, #8e44ad);
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+    -fx-padding: 5px 10px;
+    -fx-background-radius: 50%;
+    -fx-min-width: 30px;
+    -fx-min-height: 30px;
+    -fx-max-width: 30px;
+    -fx-max-height: 30px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 3, 0, 0, 0);
+    -fx-transition: all 0.2s ease;
+}
+
+.zoom-button:hover {
+    -fx-background-color: linear-gradient(to bottom, #8e44ad, #7d3c98);
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.4), 5, 0, 0, 0);
+    -fx-scale-x: 1.1;
+    -fx-scale-y: 1.1;
+}
+
+.zoom-button:pressed {
+    -fx-background-color: #7d3c98;
+    -fx-scale-x: 0.95;
+    -fx-scale-y: 0.95;
+}
+
+/* Zoom value label styles */
+.zoom-value-label {
+    -fx-text-fill: #ecf0f1;
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+    -fx-background-color: rgba(155, 89, 182, 0.3);
+    -fx-background-radius: 4px;
+    -fx-padding: 3px 8px;
+    -fx-min-width: 30px;
+    -fx-alignment: center;
+}
+
+/* Zoom slider styles */
+.zoom-slider {
+    -fx-pref-height: 30px;
+}
+
+.zoom-slider .track {
+    -fx-background-color: rgba(189, 195, 199, 0.3);
+    -fx-background-radius: 4px;
+    -fx-pref-height: 8px;
+}
+
+.zoom-slider .thumb {
+    -fx-background-color: #9b59b6;
+    -fx-background-radius: 50%;
+    -fx-pref-height: 18px;
+    -fx-pref-width: 18px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 5, 0, 0, 0);
+}
+
+.zoom-slider .thumb:hover {
+    -fx-background-color: #8e44ad;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.5), 8, 0, 0, 0);
+    -fx-scale-x: 1.1;
+    -fx-scale-y: 1.1;
+}
+
+/* Zoom reset button styles */
+.zoom-reset-button {
+    -fx-background-color: linear-gradient(to bottom, #9b59b6, #8e44ad);
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+    -fx-padding: 5px 10px;
+    -fx-background-radius: 4px;
+    -fx-min-width: 60px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 3, 0, 0, 0);
+    -fx-transition: all 0.2s ease;
+}
+
+.zoom-reset-button:hover {
+    -fx-background-color: linear-gradient(to bottom, #8e44ad, #7d3c98);
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.4), 5, 0, 0, 0);
+    -fx-scale-x: 1.05;
+    -fx-scale-y: 1.05;
+}
+
+.zoom-reset-button:pressed {
+    -fx-background-color: #7d3c98;
+    -fx-scale-x: 0.95;
+    -fx-scale-y: 0.95;
+}
+
+/* Status label styles */
+.status-label {
+    -fx-text-fill: #ecf0f1;
+    -fx-font-size: 13px;
+    -fx-padding: 8px;
+    -fx-background-color: rgba(52, 73, 94, 0.5);
+    -fx-background-radius: 6px;
+    -fx-border-color: rgba(255, 255, 255, 0.1);
+    -fx-border-radius: 6px;
+}
+
+/* Container styles */
+.controls-container {
+    -fx-spacing: 15;
+    -fx-padding: 15;
+    -fx-background-color: rgba(44, 62, 80, 0.7);
+    -fx-background-radius: 10;
+    -fx-border-color: rgba(255, 255, 255, 0.1);
+    -fx-border-radius: 10;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 10, 0, 0, 0);
+}
+
+.button-container {
+    -fx-spacing: 15;
+    -fx-padding: 5;
+}
+
+/* Animation for cells */
+@keyframes cell-appear {
+    from { -fx-opacity: 0; -fx-scale-x: 0.5; -fx-scale-y: 0.5; }
+    to { -fx-opacity: 1; -fx-scale-x: 1; -fx-scale-y: 1; }
+}
+
+.cell-alive {
+    -fx-fill: #3498db;
+    -fx-opacity: 1;
+    -fx-animation: cell-appear 0.3s ease-out;
+}

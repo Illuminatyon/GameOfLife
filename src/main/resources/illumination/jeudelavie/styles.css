@@ -1,0 +1,159 @@
+/* Styles pour le Jeu de la Vie */
+
+/* Styles généraux */
+.root {
+    -fx-background-color: #333333;
+    -fx-font-family: 'Arial';
+}
+
+/* Styles pour le menu */
+.menu-bar {
+    -fx-background-color: #444444;
+    -fx-border-color: #555555;
+    -fx-border-width: 0 0 1 0;
+}
+
+.menu-bar .label {
+    -fx-text-fill: #e8e8e8;
+}
+
+.menu-bar .menu:hover, .menu-bar .menu:showing {
+    -fx-background-color: #555555;
+}
+
+.menu-item {
+    -fx-background-color: #444444;
+}
+
+.menu-item .label {
+    -fx-text-fill: #e8e8e8;
+}
+
+.menu-item:focused, .menu-item:hover {
+    -fx-background-color: #555555;
+}
+
+.context-menu {
+    -fx-background-color: #444444;
+    -fx-border-color: #555555;
+    -fx-border-width: 1px;
+}
+
+/* Styles pour les titres */
+.title-label {
+    -fx-text-fill: #e8e8e8;
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+}
+
+.subtitle-label {
+    -fx-text-fill: #cccccc;
+    -fx-font-size: 14px;
+}
+
+/* Styles pour le canvas */
+.game-canvas {
+    -fx-background-color: #000000;
+    -fx-border-color: #555555;
+    -fx-border-width: 2px;
+}
+
+/* Styles pour les conteneurs de contrôles */
+.controls-container {
+    -fx-background-color: #444444;
+    -fx-padding: 15px;
+    -fx-spacing: 10px;
+    -fx-border-color: #555555;
+    -fx-border-width: 1px;
+    -fx-border-radius: 5px;
+}
+
+.button-container, .slider-container {
+    -fx-background-color: #3a3a3a;
+    -fx-padding: 10px;
+    -fx-spacing: 10px;
+    -fx-border-color: #555555;
+    -fx-border-width: 1px;
+    -fx-border-radius: 5px;
+}
+
+/* Styles pour les boutons */
+.control-button, .speed-button, .zoom-button, .zoom-reset-button {
+    -fx-background-color: #4a4a4a;
+    -fx-text-fill: #e8e8e8;
+    -fx-font-size: 12px;
+    -fx-padding: 8px 15px;
+    -fx-border-color: #666666;
+    -fx-border-width: 1px;
+    -fx-border-radius: 3px;
+}
+
+.control-button:hover, .speed-button:hover, .zoom-button:hover, .zoom-reset-button:hover {
+    -fx-background-color: #5a5a5a;
+}
+
+.control-button:pressed, .speed-button:pressed, .zoom-button:pressed, .zoom-reset-button:pressed {
+    -fx-background-color: #3a3a3a;
+}
+
+/* Style spécifique pour le bouton aléatoire */
+.random-button {
+    -fx-background-color: #4a4a4a;
+    -fx-text-fill: #e8e8e8;
+    -fx-font-size: 12px;
+    -fx-padding: 8px 15px;
+    -fx-border-color: #666666;
+    -fx-border-width: 1px;
+    -fx-border-radius: 3px;
+}
+
+.random-button:hover {
+    -fx-background-color: #5a5a5a;
+}
+
+.random-button:pressed {
+    -fx-background-color: #3a3a3a;
+}
+
+/* Styles pour les sliders */
+.speed-slider, .zoom-slider {
+    -fx-show-tick-labels: true;
+    -fx-show-tick-marks: true;
+}
+
+.slider .track {
+    -fx-background-color: #666666;
+}
+
+.slider .thumb {
+    -fx-background-color: #aaaaaa;
+}
+
+/* Styles pour les labels */
+.slider-label, .speed-value-label, .zoom-value-label, .generation-label, .generation-value-label {
+    -fx-text-fill: #e8e8e8;
+    -fx-font-size: 12px;
+}
+
+.generation-container {
+    -fx-background-color: #3a3a3a;
+    -fx-padding: 10px;
+    -fx-border-color: #555555;
+    -fx-border-width: 1px;
+    -fx-border-radius: 3px;
+}
+
+.generation-value-label {
+    -fx-font-weight: bold;
+    -fx-text-fill: #7cfc00; /* Light green */
+}
+
+.status-label {
+    -fx-text-fill: #e8e8e8;
+    -fx-font-size: 14px;
+    -fx-padding: 10px;
+    -fx-background-color: #3a3a3a;
+    -fx-border-color: #555555;
+    -fx-border-width: 1px;
+    -fx-border-radius: 3px;
+}

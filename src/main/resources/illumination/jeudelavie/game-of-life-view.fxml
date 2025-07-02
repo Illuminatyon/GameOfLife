@@ -68,7 +68,7 @@
     </top>
 
     <center>
-        <Canvas fx:id="gameCanvas" width="800" height="400" styleClass="game-canvas" visible="true" managed="true"/>
+        <Canvas fx:id="gameCanvas" width="1400" height="500" styleClass="game-canvas" visible="true" managed="true"/>
     </center>
 
     <bottom>

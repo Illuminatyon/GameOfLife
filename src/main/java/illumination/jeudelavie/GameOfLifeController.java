@@ -84,49 +84,6 @@ public class GameOfLifeController {
     private void setupCanvasEvents() {
         // Clic de souris pour ajouter/supprimer des cellules
         gameCanvas.setOnMouseClicked(this::handleCanvasClick);
-
-        // Gestion du panoramique (déplacement de la vue)
-        gameCanvas.setOnMousePressed(event -> {
-            // Activer le panoramique uniquement si la touche Ctrl est enfoncée
-            if (event.isControlDown()) {
-                isPanning = true;
-                lastX = event.getX();
-                lastY = event.getY();
-            }
-        });
-
-        gameCanvas.setOnMouseDragged(event -> {
-            if (isPanning) {
-                double deltaX = event.getX() - lastX;
-                double deltaY = event.getY() - lastY;
-                offsetX += deltaX;
-                offsetY += deltaY;
-                lastX = event.getX();
-                lastY = event.getY();
-
-                // Vérifier si l'utilisateur panne près des bords et agrandir la grille si nécessaire
-                checkAndExpandGrid();
-
-                drawGrid();
-            }
-        });
-
-        gameCanvas.setOnMouseReleased(event -> {
-            isPanning = false;
-        });
-
-        // Ajouter des écouteurs pour les touches du clavier
-        rootPane.setOnKeyPressed(event -> {
-            if (event.getCode() == KeyCode.CONTROL) {
-                gameCanvas.setCursor(javafx.scene.Cursor.MOVE);
-            }
-        });
-
-        rootPane.setOnKeyReleased(event -> {
-            if (event.getCode() == KeyCode.CONTROL) {
-                gameCanvas.setCursor(javafx.scene.Cursor.DEFAULT);
-            }
-        });
     }
 
     /**
@@ -230,7 +187,6 @@ public class GameOfLifeController {
                 "3. Dans tous les autres cas, une cellule meurt ou reste morte (par solitude ou surpopulation).\n\n" +
                 "Utilisation:\n" +
                 "- Cliquez sur la grille pour ajouter/supprimer des cellules.\n" +
-                "- Maintenez la touche Ctrl enfoncée pour déplacer la vue.\n" +
                 "- Utilisez les contrôles de zoom et de vitesse dans le menu Options.\n" +
                 "- Démarrez/arrêtez la simulation avec le menu Simulation.");
         alert.showAndWait();
@@ -329,18 +285,16 @@ public class GameOfLifeController {
      * Gère le clic sur le canvas pour ajouter/supprimer des cellules.
      */
     private void handleCanvasClick(MouseEvent event) {
-        if (!event.isControlDown()) { // Pas la touche Ctrl (utilisée pour le panoramique)
-            int gridX = (int) ((event.getX() - offsetX) / cellSize);
-            int gridY = (int) ((event.getY() - offsetY) / cellSize);
+        int gridX = (int) ((event.getX() - offsetX) / cellSize);
+        int gridY = (int) ((event.getY() - offsetY) / cellSize);
 
-            // Vérifier si les coordonnées sont dans les limites de la grille
-            if (gridX >= 0 && gridX < gameOfLife.getWidth() && 
-                gridY >= 0 && gridY < gameOfLife.getHeight()) {
+        // Vérifier si les coordonnées sont dans les limites de la grille
+        if (gridX >= 0 && gridX < gameOfLife.getWidth() && 
+            gridY >= 0 && gridY < gameOfLife.getHeight()) {
 
-                gameOfLife.toggleCell(gridX, gridY);
-                drawGrid();
-                updateStatusLabel();
-            }
+            gameOfLife.toggleCell(gridX, gridY);
+            drawGrid();
+            updateStatusLabel();
         }
     }
 
@@ -503,7 +457,7 @@ public class GameOfLifeController {
         if (isRunning) {
             statusLabel.setText("Simulation en cours... Cliquez sur 'Arrêter' pour mettre en pause.");
         } else {
-            statusLabel.setText("Cliquez sur la grille pour ajouter/supprimer des cellules. Maintenez la touche Ctrl pour déplacer la vue.");
+            statusLabel.setText("Cliquez sur la grille pour ajouter/supprimer des cellules.");
         }
     }
 }

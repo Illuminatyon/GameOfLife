@@ -64,7 +64,7 @@
                         <!-- Default configuration for running with: mvn clean javafx:run -->
                         <id>default-cli</id>
                         <configuration>
-                            <mainClass>illumination.jeudelavie/illumination.jeudelavie.GameOfLifeApplication</mainClass>
+                            <mainClass>illumination.jeudelavie/illumination.jeudelavie.Main</mainClass>
                             <launcher>app</launcher>
                             <jlinkZipName>app</jlinkZipName>
                             <jlinkImageName>app</jlinkImageName>
@@ -90,7 +90,7 @@
                         <configuration>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>illumination.jeudelavie.GameOfLifeApplication</mainClass>
+                                    <mainClass>illumination.jeudelavie.Main</mainClass>
                                 </transformer>
                             </transformers>
                         </configuration>
@@ -98,51 +98,6 @@
                 </executions>
             </plugin>
 
-            <!-- Plugin pour créer un exécutable Windows (.exe) -->
-            <plugin>
-                <groupId>com.akathist.maven.plugins.launch4j</groupId>
-                <artifactId>launch4j-maven-plugin</artifactId>
-                <version>2.4.1</version>
-                <executions>
-                    <execution>
-                        <id>l4j-clui</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>launch4j</goal>
-                        </goals>
-                        <configuration>
-                            <headerType>gui</headerType>
-                            <jar>${project.build.directory}/${project.artifactId}-${project.version}.jar</jar>
-                            <outfile>${project.basedir}/src/bin/GameOfLife.exe</outfile>
-                            <downloadUrl>https://adoptium.net/</downloadUrl>
-                            <classPath>
-                                <mainClass>illumination.jeudelavie.GameOfLifeApplication</mainClass>
-                                <preCp>anything</preCp>
-                            </classPath>
-                            <!-- Using default icon -->
-                            <jre>
-                                <path>%JAVA_HOME%;%PATH%</path>
-                                <requiresJdk>false</requiresJdk>
-                                <requires64Bit>false</requires64Bit>
-                                <minVersion>17</minVersion>
-                                <maxVersion></maxVersion>
-                            </jre>
-                            <versionInfo>
-                                <fileVersion>1.0.0.0</fileVersion>
-                                <txtFileVersion>${project.version}</txtFileVersion>
-                                <fileDescription>Jeu de la Vie de Conway</fileDescription>
-                                <copyright>Copyright © 2024</copyright>
-                                <productVersion>1.0.0.0</productVersion>
-                                <txtProductVersion>1.0.0.0</txtProductVersion>
-                                <productName>Jeu de la Vie</productName>
-                                <companyName></companyName>
-                                <internalName>GameOfLife</internalName>
-                                <originalFilename>GameOfLife.exe</originalFilename>
-                            </versionInfo>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
     </build>
 </project>

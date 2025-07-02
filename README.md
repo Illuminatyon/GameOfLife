@@ -73,27 +73,6 @@ Des structures qui produisent des vaisseaux à l'infini.
    mvn javafx:run
    ```
 
-### Création de l'exécutable
-Pour créer un fichier exécutable (.exe) pour Windows :
-
-1. Exécutez la commande Maven ou le script batch :
-   ```
-   mvn clean package
-   ```
-   ou
-   ```
-   build.bat
-   ```
-
-2. L'exécutable sera créé dans le dossier `src\bin` sous le nom `GameOfLife.exe`.
-   - Chemin complet : `[dossier_du_projet]\src\bin\GameOfLife.exe`
-   - Vous pouvez y accéder en naviguant dans le dossier du projet et en ouvrant le sous-dossier "src\bin"
-
-3. Double-cliquez sur l'exécutable pour lancer l'application.
-
-### Exécutable précompilé
-Un fichier exécutable (.exe pour Windows) est également disponible dans la section "Releases" du dépôt GitHub. Téléchargez simplement le fichier et double-cliquez dessus pour lancer l'application.
-
 ## Utilisation
 - **Démarrer/Arrêter** : Lance ou met en pause la simulation
 - **Avancer d'un tour** : Fait évoluer la grille d'une génération
@@ -115,6 +94,8 @@ Ce projet est sous licence MIT. Voir le fichier LICENSE pour plus de détails.
 
 ## Auteur
 Illumination
+
+Je suis le créateur de ce projet. Vous pouvez me retrouver sur LinkedIn: [Mon profil LinkedIn](https://www.linkedin.com/in/fabio-guerreiro-marques-16a442272/) ou visiter mon portfolio: [www.fabioguerreiromarques.fr](http://www.fabioguerreiromarques.fr)
 
 ## Remerciements
 - John Conway pour avoir inventé ce fascinant automate cellulaire
